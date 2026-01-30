@@ -1,0 +1,42 @@
+## Interface: 110507, 120000
+## Title: My Character Panel
+## Notes: Refonte de l'onglet "Info personnages" du jeu. (API 12.0)
+## Author: Eiganjos
+## Version: 1.0
+## SavedVariables: MyCharacterPanelDB
+## IconTexture: Interface\AddOns\MyCharacterPanel\Utils\logo\mcpaddon.png
+## X-License: Custom (See LICENSE)
+
+# On charge ici les fichiers pour la configuration et les constantes
+Config\Consts.lua
+Config\Options.lua
+
+# On charge les fichiers de traduction pour que l'addon parle français et anglais
+Locales\enUS.lua
+Locales\enGB.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\esMX.lua
+Locales\frFR.lua
+Locales\itIT.lua
+Locales\ptBR.lua
+Locales\ruRU.lua
+Locales\koKR.lua
+Locales\zhCN.lua
+
+# Des petits outils pour m'aider à formater le texte
+Utils\Formatting.lua
+
+# Ici je mets tous les morceaux de mon interface (équipement, stats, etc.)
+Mixins\Slot.lua
+Mixins\Stats.lua
+Mixins\Equipment.lua
+Mixins\Titles.lua
+Mixins\Coin.lua
+Mixins\Reputation.lua
+
+# Le script principal qui gère la logique des mixins
+Mixins\Main.lua
+
+# Et enfin le fichier principal qui assemble tout et lance l'addon
+Core.lua
