@@ -25,8 +25,8 @@ f:EnableMouse(true)
 
 f:SetBackdrop({
     bgFile = nil, 
-    edgeFile = C.BORDER_TEXTURE,
-    tile = true, tileSize = 256, edgeSize = 28,
+    edgeFile = C.BORDER_TEXTURE, 
+    tile = true, tileSize = 256, edgeSize = 28, 
     insets = { left = 8, right = 8, top = 8, bottom = 8 }
 })
 f:SetBackdropColor(1, 1, 1, 1) 

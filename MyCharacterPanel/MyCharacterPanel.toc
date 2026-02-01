@@ -2,10 +2,22 @@
 ## Title: My Character Panel
 ## Notes: Refonte de l'onglet "Info personnages" du jeu. (API 12.0)
 ## Author: Eiganjos
-## Version: 1.0
+## Version: v1.0.0
 ## SavedVariables: MyCharacterPanelDB
 ## IconTexture: Interface\AddOns\MyCharacterPanel\Utils\logo\mcpaddon.png
 ## X-License: Custom (See LICENSE)
+## X-Curse-Project-ID: 1410556
+## Category-enUS: User Interface
+## Category-deDE: Benutzerinterface
+## Category-esES: Interfaz de usuario
+## Category-esMX: Interfaz de usuario
+## Category-frFR: Interface utilisateur
+## Category-itIT: Interfaccia utente
+## Category-koKR: 사용자 인터페이스
+## Category-ptBR: Interface do usuário
+## Category-ruRU: Интерфейс пользователя
+## Category-zhCN: 用户界面
+## Category-zhTW: 使用者介面
 
 # On charge ici les fichiers pour la configuration et les constantes
 Config\Consts.lua

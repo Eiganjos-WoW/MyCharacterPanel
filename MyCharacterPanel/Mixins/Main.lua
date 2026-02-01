@@ -777,14 +777,15 @@ function MainMixin:OnLoad()
     self:SetScript("OnDragStop", function() CharacterFrame:StopMovingOrSizing() end)
     
     self.Background = self:CreateTexture(nil, "BACKGROUND", nil, -7)
-    self.Background:SetAllPoints()
+    self.Background:SetPoint("TOPLEFT", 8, -8)
+    self.Background:SetPoint("BOTTOMRIGHT", -8, 8)
     self.Background:SetAtlas(C.BACKGROUND_ATLAS)
     self.Background:SetDesaturated(true)
     if C.COLOR_BACKGROUND_TINT then self.Background:SetVertexColor(unpack(C.COLOR_BACKGROUND_TINT)) end
 
     self.BottomLight = self:CreateTexture(nil, "BACKGROUND", nil, -6)
-    self.BottomLight:SetPoint("BOTTOMLEFT", 0, 0)
-    self.BottomLight:SetPoint("BOTTOMRIGHT", 0, 0)
+    self.BottomLight:SetPoint("BOTTOMLEFT", 8, 8)
+    self.BottomLight:SetPoint("BOTTOMRIGHT", -8, 8)
     self.BottomLight:SetHeight(250) 
     self.BottomLight:SetGradient("VERTICAL", CreateColor(1, 1, 1, 0.15), CreateColor(1, 1, 1, 0)) 
     self.BottomLight:SetBlendMode("ADD")
