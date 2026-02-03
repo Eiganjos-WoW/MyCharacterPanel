@@ -29,58 +29,46 @@ local MenuUtil = MenuUtil
 addon.EquipmentMixin = {}
 local EquipmentMixin = addon.EquipmentMixin
 
--- Récupération sécurisée des globales pour garantir le type 'string' (et non string?)
--- Récupération des globales via L
-local TEXT_CONFIRM_SAVE = L["TEXT_CONFIRM_SAVE"]
-local TEXT_CONFIRM_DELETE = L["TEXT_CONFIRM_DELETE"]
-local TEXT_YES = L["YES"]
-local TEXT_NO = L["NO"]
-local TEXT_EQUIP = L["EQUIP"]
-local TEXT_SAVE = L["SAVE"]
-local TEXT_NEW_SET = L["NEW_SET"]
-local TEXT_EDIT = L["EDIT"]
-local TEXT_DELETE = L["DELETE"]
-local TEXT_SPECIALIZATION = L["SPECIALIZATION"]
-local TEXT_NAME = L["NAME"]
-local TEXT_CHOOSE_ICON = L["CHOOSE_ICON"]
-local TEXT_ENTER_NAME = L["ENTER_NAME"]
-local TEXT_CANCEL = L["CANCEL"]
-local TEXT_OK = L["OK"]
-local TEXT_EQUIPMENT = L["TITLE_EQUIPMENT"]
 
--- POPUPS
-StaticPopupDialogs["MYCHARACTERPANEL_CONFIRM_SAVE_SET"] = {
-    text = TEXT_CONFIRM_SAVE,
-    button1 = TEXT_YES,
-    button2 = TEXT_NO,
-    OnAccept = function(self)
-        if self.data then
-            C_EquipmentSet.SaveEquipmentSet(self.data)
-            PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB)
-        end
-    end,
-    timeout = 0,
-    whileDead = 1,
-    hideOnEscape = 1,
-}
+-- Les textes localisés seront accédés directement via L[] dans les fonctions
 
-StaticPopupDialogs["MYCHARACTERPANEL_CONFIRM_DELETE_SET"] = {
-    text = TEXT_CONFIRM_DELETE, 
-    button1 = TEXT_YES,
-    button2 = TEXT_NO,
-    OnAccept = function(self)
-        if self.data then
-            C_EquipmentSet.DeleteEquipmentSet(self.data)
-            PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB)
-        end
-    end,
-    timeout = 0,
-    whileDead = 1,
-    hideOnEscape = 1,
-    showAlert = 1,
-}
 
 function EquipmentMixin:OnLoad()
+    -- Définition des popups (après chargement des locales)
+    if not StaticPopupDialogs["MYCHARACTERPANEL_CONFIRM_SAVE_SET"] then
+        StaticPopupDialogs["MYCHARACTERPANEL_CONFIRM_SAVE_SET"] = {
+            text = L["TEXT_CONFIRM_SAVE"],
+            button1 = L["YES"],
+            button2 = L["NO"],
+            OnAccept = function(self)
+                if self.data then
+                    C_EquipmentSet.SaveEquipmentSet(self.data)
+                    PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB)
+                end
+            end,
+            timeout = 0,
+            whileDead = 1,
+            hideOnEscape = 1,
+        }
+    end
+    
+    if not StaticPopupDialogs["MYCHARACTERPANEL_CONFIRM_DELETE_SET"] then
+        StaticPopupDialogs["MYCHARACTERPANEL_CONFIRM_DELETE_SET"] = {
+            text = L["TEXT_CONFIRM_DELETE"], 
+            button1 = L["YES"],
+            button2 = L["NO"],
+            OnAccept = function(self)
+                if self.data then
+                    C_EquipmentSet.DeleteEquipmentSet(self.data)
+                    PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB)
+                end
+            end,
+            timeout = 0,
+            whileDead = 1,
+            hideOnEscape = 1,
+        }
+    end
+    
     -- Fond général
 
     self.Background = self:CreateTexture(nil, "BACKGROUND")

@@ -381,7 +381,7 @@ function StatsMixin:OnLoad()
     self:SetClampedToScreen(true)
     self:SetClipsChildren(false) 
 
-    self.layoutOrder = {} 
+    StatsMixin.layoutOrder = {} 
 
     -- État fermé
 
@@ -492,10 +492,170 @@ function StatsMixin:OnLoad()
     self.ILVLTitle:SetTextColor(0.8, 0.8, 0.8)
     self.ILVLTitle:SetScale(1.1)
     
-    self.ILVLValue = self.HeaderContainer:CreateFontString(nil, "OVERLAY", "SystemFont_Shadow_Huge3") 
+    self.ILVLValue = self.HeaderContainer:CreateFontString(nil, "OVERLAY", "SystemFont_Shadow_Huge1") 
     self.ILVLValue:SetPoint("TOP", 0, -45) 
     self.ILVLValue:SetTextColor(1, 1, 1)
     self.ILVLValue:SetScale(1.35)
+    
+    -- === DRAG AND DROP HANDLERS ===
+    
+    -- === DRAG AND DROP HANDLERS ===
+    
+    function StatsMixin:OnDragStart(frame)
+        if not frame:IsMovable() then return end
+        frame:StartMoving()
+        frame.isMoving = true 
+        -- Niveau relatif pour être sûr d'être au dessus mais pas dans l'espace
+        frame:SetFrameLevel(frame:GetParent():GetFrameLevel() + 50)
+        frame:SetAlpha(0.6) 
+        
+        frame:SetScript("OnUpdate", function(self)
+             StatsMixin:OnDragUpdate(self)
+        end)
+    end
+    
+    function StatsMixin:OnDragUpdate(frame)
+        -- 1. Récupération de la position relative du curseur
+        local uiScale = UIParent:GetEffectiveScale()
+        local frameScale = frame:GetEffectiveScale() -- Scale effectif de la frame
+        local cx, cy = GetCursorPosition()
+        
+        -- On convertit cy pour qu'il soit dans l'espace de coordonnées de la frame
+        -- cy est l'écran global, on divise par frameScale pour avoir des unités locales
+        local cy_local = cy / frameScale
+        
+        local content = frame:GetParent()
+        local top = content:GetTop()
+        if not top then return end
+        
+        -- Position Y du curseur par rapport au HAUT du contenu
+        local cursorY = cy_local - top 
+        
+        -- 2. Extraction des autres éléments (l'ordre relatif des autres ne change pas)
+        local others = {}
+        for _, f in ipairs(StatsMixin.layoutOrder) do
+            if f ~= frame then
+                table.insert(others, f)
+            end
+        end
+        
+        -- 3. Logique Géométrique (Remplacement de la simulation)
+        local insertIndex = #others + 1 
+        
+        for i, other in ipairs(others) do
+            local top = other:GetTop()
+            local bottom = other:GetBottom()
+            if top and bottom then
+                local s = other:GetEffectiveScale()
+                local cursorY_scaled = cy / s
+                local center = (top + bottom) / 2
+                
+                if cursorY_scaled > center then
+                    insertIndex = i
+                    break
+                end
+            end
+        end
+
+        if insertIndex < 2 then insertIndex = 2 end
+        
+        -- 4. Reconstruction
+        local newOrder = {}
+        local inserted = false
+        
+        if insertIndex > #others then
+            for _, f in ipairs(others) do table.insert(newOrder, f) end
+            table.insert(newOrder, frame)
+        else
+            local current = 1
+            for i = 1, #others do
+                if current == insertIndex then
+                    table.insert(newOrder, frame)
+                    inserted = true
+                end
+                table.insert(newOrder, others[i])
+                current = current + 1
+            end
+            if not inserted then table.insert(newOrder, frame) end
+        end
+        
+        -- 5. Application
+        local changed = false
+        if #newOrder ~= #StatsMixin.layoutOrder then changed = true
+        else
+            for i=1, #newOrder do
+                if newOrder[i] ~= StatsMixin.layoutOrder[i] then changed = true; break end
+            end
+        end
+
+        if changed then
+            StatsMixin.layoutOrder = newOrder
+            local instance = content:GetParent() -- StatsFrame
+            if instance and instance.ReflowLayout then
+                instance:ReflowLayout(frame)
+            end
+        end
+    end
+
+    -- Nouvelle fonction pour repositionner tout le monde sans toucher au frame en cours de drag
+    function StatsMixin:ReflowLayout(draggingFrame)
+        local currentY = -105
+        
+        for _, f in ipairs(StatsMixin.layoutOrder) do
+            if f:IsShown() then
+                 if f == draggingFrame then
+                     -- On ne touche PAS au Point de celui qui est drag, 
+                     -- mais on doit quand même avancer le curseur currentY pour laisser le "trou"
+                     if f.isHeader then
+                        currentY = currentY - 32
+                     else
+                        currentY = currentY - 24
+                     end
+                 else
+                     -- On repositionne les autres
+                     f:ClearAllPoints()
+                     f:SetPoint("TOP", self.Content, "TOP", 0, currentY)
+                     
+                     if f.isHeader then
+                        currentY = currentY - 32
+                     else
+                        currentY = currentY - 24
+                     end
+                 end
+            end
+        end
+    end
+
+    function StatsMixin:OnDragStop(frame)
+        frame:StopMovingOrSizing()
+        frame:SetUserPlaced(false) -- CRITIQUE: Permet au layout de reprendre le contrôle
+        frame.isMoving = false
+        frame:SetFrameLevel(frame:GetParent():GetFrameLevel() + 10) 
+        frame:SetAlpha(1.0)
+        frame:SetScript("OnUpdate", nil)
+
+        -- Sauvegarde de l'ordre FINAL
+        local newOrder = {}
+        for _, f in ipairs(StatsMixin.layoutOrder) do
+            if f.statKey then
+                insert(newOrder, f.statKey)
+            end
+        end
+        
+        if MyCharacterPanelDB then
+            local guid = UnitGUID("player")
+            if not MyCharacterPanelDB.char then MyCharacterPanelDB.char = {} end
+            if not MyCharacterPanelDB.char[guid] then MyCharacterPanelDB.char[guid] = {} end
+            
+            MyCharacterPanelDB.char[guid].statOrder = newOrder
+        end
+        
+        -- On fait un propre UpdateStats pour tout remettre au pixel près et gérer les fonds pairs/impairs (zebra)
+        local instance = frame:GetParent():GetParent()
+        if instance and instance.UpdateStats then
+            instance:UpdateStats()
+        end
+    end
 
     -- Fonction Helper pour créer les lignes
     local function CreateStatRow(parent, label, statKey)
@@ -527,13 +687,19 @@ function StatsMixin:OnLoad()
         
         f.statKey = statKey
         f.isStatRow = true
+        
+        f:SetMovable(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", function(self) StatsMixin:OnDragStart(self) end)
+        f:SetScript("OnDragStop", function(self) StatsMixin:OnDragStop(self) end)
+        
         f:SetScript("OnEnter", function(self) StatsMixin:OnStatEnter(self) end)
         f:SetScript("OnLeave", function(self) StatsMixin:OnStatLeave(self) end)
-        insert(self.layoutOrder, f)
+        insert(StatsMixin.layoutOrder, f)
         return f
     end
 
-    local function CreateHeader(parent, text)
+    local function CreateHeader(parent, text, key)
         local f = CreateFrame("Frame", nil, parent)
         f:SetSize(C.STATS_WIDTH_OPEN - 20, 26) 
         f.Bg = f:CreateTexture(nil, "BACKGROUND")
@@ -562,18 +728,23 @@ function StatsMixin:OnLoad()
              f.Label:SetTextColor(1, 0.82, 0)
         end
         f.isHeader = true
-        insert(self.layoutOrder, f)
+        f.statKey = key -- Clé pour la sauvegarde
+        
+        -- Les bannières ne sont PLUS déplacables
+        f:SetMovable(false)
+        
+        insert(StatsMixin.layoutOrder, f)
         return f
     end
 
-    self.CatStats = CreateHeader(self.Content, L["TITLE_ATTRIBUTES"])
+    self.CatStats = CreateHeader(self.Content, L["TITLE_ATTRIBUTES"], "CAT_ATTRIBUTES")
     self.Str = CreateStatRow(self.Content, _G["SPELL_STAT1_NAME"], 1)
     self.Agi = CreateStatRow(self.Content, _G["SPELL_STAT2_NAME"], 2)
     self.Int = CreateStatRow(self.Content, _G["SPELL_STAT4_NAME"], 4)
     self.Sta = CreateStatRow(self.Content, _G["SPELL_STAT3_NAME"], 3)
     self.Armor = CreateStatRow(self.Content, _G["STAT_ARMOR"], "ARMOR") 
 
-    self.CatEnhance = CreateHeader(self.Content, L["TITLE_ENHANCEMENTS"])
+    self.CatEnhance = CreateHeader(self.Content, L["TITLE_ENHANCEMENTS"], "CAT_ENHANCEMENTS")
     self.Crit = CreateStatRow(self.Content, _G["STAT_CRITICAL_STRIKE"], "CRIT")
     self.Haste = CreateStatRow(self.Content, _G["STAT_HASTE"], "HASTE")
     self.Mastery = CreateStatRow(self.Content, _G["STAT_MASTERY"], "MASTERY")
@@ -587,6 +758,28 @@ function StatsMixin:OnLoad()
 end
 
 function StatsMixin:UpdateStats()
+    -- Initialisation de l'ordre sauvegardé
+    if not self.layoutInitialized then
+        if MyCharacterPanelDB then
+            local guid = UnitGUID("player")
+            local charDb = MyCharacterPanelDB.char and MyCharacterPanelDB.char[guid]
+            if charDb and charDb.statOrder and #charDb.statOrder > 0 then
+                -- Création d'une map pour l'ordre
+                local orderMap = {}
+                for i, key in ipairs(charDb.statOrder) do
+                    orderMap[key] = i
+                end
+                
+                table.sort(StatsMixin.layoutOrder, function(a, b)
+                    local idxA = orderMap[a.statKey] or 999
+                    local idxB = orderMap[b.statKey] or 999
+                    return idxA < idxB
+                end)
+            end
+        end
+        self.layoutInitialized = true
+    end
+
     local _, equippedIlvl = GetAverageItemLevel()
     self.ILVLValue:SetText(format("%.1f", equippedIlvl or 0))
     
@@ -673,8 +866,9 @@ function StatsMixin:UpdateStats()
     local currentY = -105 
     local zebraIndex = 0
 
-    for _, frame in ipairs(self.layoutOrder) do
+    for _, frame in ipairs(StatsMixin.layoutOrder) do
         if frame:IsShown() then
+            if frame:IsMovable() then frame:SetUserPlaced(false) end -- Sécurité supplémentaire
             frame:ClearAllPoints()
             frame:SetPoint("TOP", self.Content, "TOP", 0, currentY)
             

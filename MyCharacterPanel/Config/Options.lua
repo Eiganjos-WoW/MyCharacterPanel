@@ -36,6 +36,7 @@ local function CreateSectionHeader(parent, text, yOffset, warningText)
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     header:SetText(text)
     header:SetTextColor(unpack(THEME.accent))
+    header:SetAlpha(1.0) -- Force l'opacité complète
     
     if warningText then
         local warn = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
@@ -57,12 +58,14 @@ end
 -- Les options par défaut quand on installe l'addon
 local DEFAULTS = {
     showItemNames = true,
+    showItemLevel = true,
     scrollItemNames = true,
     showUpgradeLevels = true,
     showEnchants = true,
     showModelPreview = true,
     showSetInfo = true,         
     defaultAccordion = 1, 
+    lockZoom = false, -- Zoom non verrouillé par défaut 
     
     fonts = {
         itemLevel = FONT_DIR.."DorisPP.ttf",
@@ -77,7 +80,7 @@ local DEFAULTS = {
         [1]=true, [2]=false, [3]=true, [15]=true, [5]=true, 
         [9]=true, [10]=true, [16]=true, 
         [6]=true, [7]=true, [8]=true, [11]=true, [12]=true, 
-        [13]=false, [14]=false, [17]=true, 
+        [13]=false, [14]=false, [17]=false, 
     }
 }
 
@@ -96,8 +99,30 @@ function Options:InitDB()
         if db.fonts[k] == nil then db.fonts[k] = v end
     end
     
-    for k, v in pairs(DEFAULTS.enchantCheckSlots) do
-        if db.enchantCheckSlots[k] == nil then db.enchantCheckSlots[k] = v end
+    -- Global defaults
+    for k, v in pairs(DEFAULTS.fonts) do
+        if db.fonts[k] == nil then db.fonts[k] = v end
+    end
+
+    -- Per-Character DB
+    if not db.char then db.char = {} end
+    local guid = UnitGUID("player")
+    if not db.char[guid] then db.char[guid] = {} end
+    self.charDb = db.char[guid]
+
+    -- Init char defaults for enchantCheckSlots
+    if not self.charDb.enchantCheckSlots then
+         -- Try to migrate from global if exists (legacy support), else defaults
+         if db.enchantCheckSlots then
+             self.charDb.enchantCheckSlots = CopyTable(db.enchantCheckSlots)
+         else
+             self.charDb.enchantCheckSlots = CopyTable(DEFAULTS.enchantCheckSlots)
+         end
+    end
+    
+    -- Stat Order
+    if not self.charDb.statOrder then
+        self.charDb.statOrder = {}
     end
 
     -- Une fenêtre pour demander de recharger l'interface
@@ -141,6 +166,24 @@ function Options:InitDB()
                     UIDropDownMenu_SetText(ddFrame, name)
                 end
             end
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+    }
+
+    StaticPopupDialogs["MYCHARPANEL_RESET_STATS"] = {
+        text = "|cff00ccffMy Character Panel|r\n\n" .. (L["RESET_STATS_DESC"] or "Reset Stats?"),
+        button1 = L["CONFIRM"],
+        button2 = L["CANCEL"],
+        OnAccept = function() 
+            local guid = UnitGUID("player")
+            -- On vide la table de tri
+            if MyCharacterPanelDB.char and MyCharacterPanelDB.char[guid] then
+                MyCharacterPanelDB.char[guid].statOrder = nil 
+            end
+            ReloadUI()
         end,
         timeout = 0,
         whileDead = true,
@@ -217,6 +260,12 @@ function Options:UpdatePreview()
     local upgradeStr = ""
     if db.showUpgradeLevels then upgradeStr = fakeUpgrade end
     p.UpgradeText:SetText(upgradeStr)
+
+    if db.showItemLevel then
+        p.ItemLevel:Show()
+    else
+        p.ItemLevel:Hide()
+    end
 
     if db.showEnchants then
         local cleanEnchant = rawEnchant
@@ -445,7 +494,7 @@ function Options:CreateStandalonePanel()
 
     local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 0, -50)
-    scroll:SetPoint("BOTTOMRIGHT", -30, 40) 
+    scroll:SetPoint("BOTTOMRIGHT", -30, 70) 
     
     local regions = {scroll:GetRegions()}
     for _, region in ipairs(regions) do if region:IsObjectType("Texture") then region:Hide() end end
@@ -575,6 +624,7 @@ function Options:CreateStandalonePanel()
 
     yOffset = CreateSectionHeader(content, L["TITLE_GENERAL_DISPLAY"], yOffset)
     CreateCB(L["OPTION_SHOW_ITEM_NAMES"], "showItemNames", L["OPTION_SHOW_ITEM_NAMES_DESC"])
+    CreateCB(L["OPTION_SHOW_ITEM_LEVEL"], "showItemLevel", L["OPTION_SHOW_ITEM_LEVEL_DESC"])
     CreateCB(L["OPTION_SCROLL_NAMES"], "scrollItemNames", L["OPTION_SCROLL_NAMES_DESC"])
     CreateCB(L["OPTION_SHOW_UPGRADE"], "showUpgradeLevels", L["OPTION_SHOW_UPGRADE_DESC"])
     CreateCB(L["OPTION_SHOW_ENCHANTS"], "showEnchants", L["OPTION_SHOW_ENCHANTS_DESC"])
@@ -587,13 +637,15 @@ function Options:CreateStandalonePanel()
     yOffset, typoHeader = CreateSectionHeader(content, L["TITLE_TYPOGRAPHY"], yOffset, L["RELOAD_REQUIRED_SHORT"])
     
     -- BOUTON RELOAD UI
-    local reloadBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
-    reloadBtn:SetSize(250, 20)
-    reloadBtn:SetPoint("LEFT", typoHeader, "RIGHT", 130, 0)
-    reloadBtn:SetText(L["BUTTON_APPLY_FONTS"])
-    reloadBtn:SetScript("OnClick", function()
-        StaticPopup_Show("MYCHARPANEL_RELOAD")
-    end)
+    if typoHeader then
+        local reloadBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
+        reloadBtn:SetSize(280, 20)
+        reloadBtn:SetPoint("LEFT", typoHeader, "RIGHT", 130, 0)
+        reloadBtn:SetText(L["BUTTON_APPLY_FONTS"])
+        reloadBtn:SetScript("OnClick", function()
+            ReloadUI()
+        end)
+    end
     
     -- Fond pour la section typo (Agrandie pour tout contenir)
     local typoBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
@@ -609,16 +661,6 @@ function Options:CreateStandalonePanel()
     CreateFontDD(L["FONT_UPGRADE"], "upgrade", L["FONT_UPGRADE_DESC"])
     CreateFontDD(L["FONT_SET_BONUS"], "setBonus", L["FONT_SET_BONUS_DESC"]) 
     
-    -- Le bouton pour tout remettre comme au début
-    local resetBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
-    resetBtn:SetSize(160, 22)
-    resetBtn:SetPoint("BOTTOMRIGHT", typoBg, "BOTTOMRIGHT", -20, 15)
-    resetBtn:SetText(L["BUTTON_RESET_FONTS"])
-    resetBtn:SetScript("OnClick", function()
-        -- J'ouvre la confirmation au lieu de le faire direct
-        StaticPopup_Show("MYCHARPANEL_RESET_FONTS")
-    end)
-
     yOffset = yOffset - 40 -- Espace après la zone 
 
     yOffset = CreateSectionHeader(content, L["TITLE_BEHAVIOR"], yOffset)
@@ -652,6 +694,42 @@ function Options:CreateStandalonePanel()
     reloadText:SetText(L["RELOAD_REQUIRED_SHORT"])
     reloadText:SetTextColor(1, 0.3, 0.3)
     yOffset = yOffset - 60
+    
+    -- Notes d'information
+    local infoNote1 = content:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    infoNote1:SetPoint("TOPLEFT", 25, yOffset)
+    infoNote1:SetWidth(520)
+    infoNote1:SetJustifyH("LEFT")
+    infoNote1:SetText("|cff00ccff•|r " .. (L["INFO_NOTE_STATS_DRAG"] or "You can move stats via Click/Drag"))
+    infoNote1:SetTextColor(0.7, 0.7, 0.7)
+    yOffset = yOffset - 25
+    
+    local infoNote2 = content:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    infoNote2:SetPoint("TOPLEFT", 25, yOffset)
+    infoNote2:SetWidth(520)
+    infoNote2:SetJustifyH("LEFT")
+    infoNote2:SetText("|cff00ccff•|r " .. (L["INFO_NOTE_ZOOM_SCROLL"] or "You can change frame size with CTRL + mouse wheel"))
+    infoNote2:SetTextColor(0.7, 0.7, 0.7)
+    yOffset = yOffset - 35
+    
+    -- Checkbox pour verrouiller le zoom
+    local lockZoomCB = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
+    lockZoomCB:SetPoint("TOPLEFT", 25, yOffset)
+    lockZoomCB.text:SetText(L["OPTION_LOCK_ZOOM"] or "Lock zoom")
+    lockZoomCB.text:SetTextColor(unpack(THEME.textNormal))
+    lockZoomCB:SetChecked(self.db.lockZoom)
+    
+    lockZoomCB:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["OPTION_LOCK_ZOOM_DESC"] or "Prevents changing interface size with CTRL + Mouse Wheel")
+        GameTooltip:Show()
+    end)
+    lockZoomCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    
+    lockZoomCB:SetScript("OnClick", function(btn)
+        Options.db.lockZoom = btn:GetChecked()
+    end)
+    yOffset = yOffset - 40
 
     yOffset = CreateSectionHeader(content, L["TITLE_ALERT_MISSING_ENCHANT"], yOffset)
     local alertBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
@@ -686,13 +764,13 @@ function Options:CreateStandalonePanel()
         cb.text:SetFontObject("GameFontHighlightSmall")
         cb.text:SetTextColor(unpack(THEME.textNormal))
         
-        if not self.db.enchantCheckSlots[slotID] then
+        if not self.charDb.enchantCheckSlots[slotID] then
              cb.text:SetTextColor(0.5, 0.5, 0.5)
         end
 
-        cb:SetChecked(self.db.enchantCheckSlots[slotID])
+        cb:SetChecked(self.charDb.enchantCheckSlots[slotID])
         cb:SetScript("OnClick", function(btn)
-            self.db.enchantCheckSlots[slotID] = btn:GetChecked()
+            self.charDb.enchantCheckSlots[slotID] = btn:GetChecked()
             if btn:GetChecked() then
                 btn.text:SetTextColor(unpack(THEME.textNormal))
             else
@@ -704,11 +782,51 @@ function Options:CreateStandalonePanel()
 
     for i, data in ipairs(slotsCol1) do CreateAlertCheck(data, 30, gridStartY - ((i-1) * 30)) end
     for i, data in ipairs(slotsCol2) do CreateAlertCheck(data, 300, gridStartY - ((i-1) * 30)) end
+    
+    yOffset = gridStartY - (8 * 30) - 20
+    
+    -- ==============================================================================
+    -- SECTION: RESTAURATION (RESET)
+    -- ==============================================================================
+    
+    yOffset = CreateSectionHeader(content, L["TITLE_RESET_SECTION"] or "Restore Defaults", yOffset)
+    
+    local resetBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    resetBg:SetPoint("TOPLEFT", 10, yOffset) 
+    resetBg:SetSize(540, 80)
+    CreateBackdrop(resetBg, THEME.cardBg, {0,0,0,0})
+    
+    -- Bouton RESET POLICES
+    local resetFontsBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
+    resetFontsBtn:SetSize(220, 24)
+    resetFontsBtn:SetPoint("TOPLEFT", 40, yOffset - 25)
+    resetFontsBtn:SetText(L["BUTTON_RESET_FONTS"])
+    resetFontsBtn:SetScript("OnClick", function()
+        StaticPopup_Show("MYCHARPANEL_RESET_FONTS")
+    end)
+    
+    -- Bouton RESET STATS
+    local resetStatsBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
+    resetStatsBtn:SetSize(220, 24)
+    resetStatsBtn:SetPoint("TOPRIGHT", -40, yOffset - 25) 
+    resetStatsBtn:SetText(L["RESET_STATS"])
+    resetStatsBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["RESET_STATS"], 1, 1, 1)
+        GameTooltip:AddLine(L["RESET_STATS_DESC"], nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    resetStatsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    resetStatsBtn:SetScript("OnClick", function()
+         StaticPopup_Show("MYCHARPANEL_RESET_STATS")
+    end)
+    
+    yOffset = yOffset - 100
 
     -- Pied de page (Versions standalone)
 
     local footer = CreateFrame("Frame", nil, f)
-    footer:SetSize(600, 36) 
+    footer:SetSize(600, 60) 
     footer:SetPoint("BOTTOM", 0, 0)
     
     local sep = footer:CreateTexture(nil, "ARTWORK")
@@ -718,7 +836,7 @@ function Options:CreateStandalonePanel()
     sep:SetColorTexture(1, 1, 1, 0.05) 
 
     local devName = footer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    devName:SetPoint("TOP", footer, "TOP", 0, -5) 
+    devName:SetPoint("TOP", footer, "TOP", 0, -10) 
     devName:SetText(L["DEV_LABEL"])
 
     local devLogo = footer:CreateTexture(nil, "ARTWORK")
@@ -750,9 +868,10 @@ function Options:CreateStandalonePanel()
     classIcon:AddMaskTexture(mask)
 
     local credits = footer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall") 
-    credits:SetPoint("TOP", devName, "BOTTOM", 0, -1) 
+    credits:SetPoint("TOP", devName, "BOTTOM", 0, -5) 
+    credits:SetJustifyH("CENTER")
     credits:SetTextColor(0.7, 0.7, 0.7) 
-    credits:SetText(L["CREDITS_TEXTURE_ATLAS"])
+    credits:SetText(L["CREDITS_TEXTURE_ATLAS"] .. "\n" .. L["CREDITS_NEXUS"])
 
     self.Frame = f
 end
@@ -797,6 +916,24 @@ function Options:RegisterBlizzardSettings()
     
     -- L'icône roue dentée est insérée directement dans le texte via |T...|t
     desc:SetText(L["INSTRUCTION_ACCESS"])
+    
+    -- Section d'aide : Zoom
+    
+    local helpZoom = center:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    helpZoom:SetPoint("TOP", desc, "BOTTOM", 0, -30)
+    helpZoom:SetWidth(420)
+    helpZoom:SetSpacing(3)
+    helpZoom:SetJustifyH("LEFT")
+    helpZoom:SetText(L["HELP_ZOOM"] or "|cffffffffZoom:|r Hold CTRL and use mouse wheel to adjust size (50%-150%)")
+    
+    -- Section d'aide : Réorganisation des stats
+    
+    local helpStats = center:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    helpStats:SetPoint("TOP", helpZoom, "BOTTOM", 0, -15)
+    helpStats:SetWidth(420)
+    helpStats:SetSpacing(3)
+    helpStats:SetJustifyH("LEFT")
+    helpStats:SetText(L["HELP_STATS_REORDER"] or "|cffffffffStats Reorder:|r Click and drag stats to reorder them")
 
     -- Pied de page avec crédits
 

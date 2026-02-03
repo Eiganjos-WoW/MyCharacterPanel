@@ -113,6 +113,8 @@ L["TITLE_PREVIEW"] = "VISTA PREVIA"
 L["TITLE_GENERAL_DISPLAY"] = "VISUALIZACIÓN GENERAL"
 
 L["OPTION_SHOW_ITEM_NAMES"] = "Mostrar nombres de objetos"
+L["OPTION_SHOW_ITEM_LEVEL"] = "Show Item Level"
+L["OPTION_SHOW_ITEM_LEVEL_DESC"] = "Show or hide the item level on the icon."
 L["OPTION_SHOW_ITEM_NAMES_DESC"] = "Muestra u oculta el nombre completo del objeto."
 L["OPTION_SCROLL_NAMES"] = "Desplazar nombres largos"
 L["OPTION_SCROLL_NAMES_DESC"] = "Desplaza el nombre del objeto si es demasiado largo."
@@ -152,7 +154,39 @@ L["OPTION_ALERT_MISSING_ENCHANT_DESC"] = "Selecciona las ranuras que deben mostr
 
 L["DEV_LABEL"] = "|cffffffffDev:|r |cff0070deEiganjos|r-|cffffd100Archimonde|r"
 L["CREDITS_TEXTURE_ATLAS"] = "Gracias a LanceDH por el addon TextureAtlasViewer"
+L["CREDITS_NEXUS"] = "Gracias a NexuswOw por el arreglo de Ilvl"
 L["INSTRUCTION_ACCESS"] = "Accede a la configuración con el botón |TInterface\\Buttons\\UI-OptionsButton:18:18:0:-2|t \no escribe |cff00ccff/mcp|r en el chat"
+
+-- ==============================================================================
+-- Update Notes (MAJ) & Reset
+-- ==============================================================================
+L["RESET_STATS"] = "Restablecer orden de estadísticas"
+L["RESET_STATS_DESC"] = "Restablece el orden de las estadísticas a la configuración predeterminada."
+L["MAJ_TITLE"] = "Novedades - Versión %s"
+L["MAJ_FEATURE_1"] = "- Arrastrar y soltar: ¡Arrastra y suelta tus estadísticas para reorganizarlas!"
+L["MAJ_FEATURE_2"] = "- Guardado por personaje: Cada personaje ahora tiene su propia configuración."
+L["MAJ_FEATURE_3"] = "- Corrección de API para iLVL"
+L["MAJ_FEATURE_4"] = "- Zoom: Hold CTRL + Mouse Wheel to adjust interface size (50% to 150%)"
+L["MAJ_FEATURE_5"] = "- Corrección: Aplicación de aceite/encantamiento en armas reparada"
+L["MAJ_NOTE_OPTIONS"] = "¡No olvides que las opciones están disponibles a través del icono |TInterface\\Buttons\\UI-OptionsButton:16:16:0:-1|t o mediante el comando |cff00ccff/mcp config|r en el juego!"
+L["SEE_OPTIONS"] = "Ver opciones"
+L["TITLE_RESET_SECTION"] = "Restaurar configuración predeterminada"
+
+
+
+-- Notes d'information dans les options
+L["INFO_NOTE_STATS_DRAG"] = "You can move stats between each other via Click/Drag."
+L["INFO_NOTE_ZOOM_SCROLL"] = "You can change the frame size by holding CTRL + mouse wheel up or down."
+L["OPTION_LOCK_ZOOM"] = "Lock zoom"
+L["OPTION_LOCK_ZOOM_DESC"] = "Prevents changing the interface size with CTRL + Mouse Wheel."
+-- ==============================================================================
+-- Zoom / Scaling
+-- ==============================================================================
+L["ZOOM_HINT"] = "CTRL + Scroll to zoom"
+L["ZOOM_FEEDBACK"] = "Zoom %d%%"
+L["RESET_ZOOM"] = "Reset zoom"
+L["HELP_ZOOM"] = "|cffffffffInterface Zoom:|r Hold |cff00ccffCTRL|r and use the |cff00ccffmouse wheel|r to adjust the addon size between 50% and 150%. Zoom is saved automatically."
+L["HELP_STATS_REORDER"] = "|cffffffffStats Reordering:|r Click and hold on a stat, then drag it to change its display order. Order is saved per character."
 
 -- ==============================================================================
 -- Traduction pour Config/Consts.lua

@@ -113,6 +113,8 @@ L["TITLE_PREVIEW"] = "APERÇU EN TEMPS RÉEL"
 L["TITLE_GENERAL_DISPLAY"] = "AFFICHAGE GÉNÉRAL"
 
 L["OPTION_SHOW_ITEM_NAMES"] = "Afficher le nom des objets"
+L["OPTION_SHOW_ITEM_LEVEL"] = "Afficher le niveau d'objet"
+L["OPTION_SHOW_ITEM_LEVEL_DESC"] = "Affiche ou masque le niveau d'objet sur l'icône."
 L["OPTION_SHOW_ITEM_NAMES_DESC"] = "Affiche ou masque le nom complet de l'objet."
 L["OPTION_SCROLL_NAMES"] = "Activer le défilement des noms"
 L["OPTION_SCROLL_NAMES_DESC"] = "Fait défiler le nom de l'objet s'il est trop long."
@@ -152,7 +154,40 @@ L["OPTION_ALERT_MISSING_ENCHANT_DESC"] = "Sélectionnez les emplacements devant 
 
 L["DEV_LABEL"] = "|cffffffffDev :|r |cff0070deEiganjos|r-|cffffd100Archimonde|r"
 L["CREDITS_TEXTURE_ATLAS"] = "Remerciements à LanceDH pour l'addon TextureAtlasViewer"
-L["INSTRUCTION_ACCESS"] = "Accédez à la configuration via le bouton |TInterface\\Buttons\\UI-OptionsButton:18:18:0:-2|t \nou saisissez la commande |cff00ccff/mcp|r dans le chat"
+L["CREDITS_NEXUS"] = "Merci à NexuswOw pour le développement"
+
+-- ==============================================================================
+-- Nouveautés (MAJ) & Reset
+-- ==============================================================================
+L["RESET_STATS"] = "Réinitialiser l'ordre des statistiques"
+L["RESET_STATS_DESC"] = "Remet l'ordre des statistiques à la configuration par défaut."
+L["MAJ_TITLE"] = "Nouveautés - Version %s"
+L["MAJ_FEATURE_1"] = "- Drag & Drop : Glissez-déposez vos statistiques pour les réorganiser !"
+L["MAJ_FEATURE_2"] = "- Sauvegarde par personnage : Chaque personnage a désormais sa propre configuration."
+L["MAJ_FEATURE_3"] = "- Correctif de l'API pour l'iLVL"
+L["MAJ_FEATURE_4"] = "- Zoom : Maintenez CTRL + Molette pour ajuster la taille de l'interface (50% à 150%)"
+L["MAJ_FEATURE_5"] = "- Correctif : Application des huiles/enchantements sur les armes réparée"
+L["MAJ_NOTE_OPTIONS"] = "N'oubliez pas que des options sont disponibles via l'icône |TInterface\\Buttons\\UI-OptionsButton:16:16:0:-1|t de l'addon ou via la commande |cff00ccff/mcp config|r en jeu !"
+L["SEE_OPTIONS"] = "Voir les options"
+L["TITLE_RESET_SECTION"] = "Restaurer les paramètres par défaut"
+L["INSTRUCTION_ACCESS"] = "Accédez à la configuration via le bouton |TInterface\\Buttons\\UI-OptionsButton:18:18:0:-2|t \nou saisissez la commande |cff00ccff/mcp config|r dans le chat"
+
+-- Textes d'aide pour les options
+L["HELP_ZOOM"] = "|cffffffffZoom de l'interface :|r Maintenez |cff00ccffCTRL|r et utilisez la |cff00ccffmolette de la souris|r pour ajuster la taille de l'addon entre 50% et 150%. Le zoom est sauvegardé automatiquement."
+L["HELP_STATS_REORDER"] = "|cffffffffRéorganisation des statistiques :|r Cliquez et maintenez sur une statistique, puis faites-la glisser pour changer son ordre d'affichage. L'ordre est sauvegardé par personnage."
+
+-- Notes d'information dans les options
+L["INFO_NOTE_STATS_DRAG"] = "Vous pouvez déplacer les statistiques entre elles via un Cliquer/Déposer."
+L["INFO_NOTE_ZOOM_SCROLL"] = "Vous pouvez modifier la taille du cadre en maintenant CTRL + la molette vers le haut ou vers le bas."
+L["OPTION_LOCK_ZOOM"] = "Verrouiller le zoom"
+L["OPTION_LOCK_ZOOM_DESC"] = "Empêche la modification de la taille de l'interface avec CTRL + Molette."
+
+-- ==============================================================================
+-- Zoom / Scaling
+-- ==============================================================================
+L["ZOOM_HINT"] = "CTRL + Molette pour zoomer"
+L["ZOOM_FEEDBACK"] = "Zoom %d%%"
+L["RESET_ZOOM"] = "Réinitialiser le zoom"
 
 -- ==============================================================================
 -- Traduction pour Config/Consts.lua

@@ -19,11 +19,37 @@ local SocketInventoryItem = SocketInventoryItem
 local IsModifiedClick = IsModifiedClick
 local IsShiftKeyDown = IsShiftKeyDown
 local CursorHasItem = CursorHasItem
+local SpellIsTargeting = SpellIsTargeting
 local ItemLocation = ItemLocation
 local GetInventoryItemLink = GetInventoryItemLink
 
 addon.SlotMixin = {}
 local SlotMixin = addon.SlotMixin
+
+-- Fonction Globale pour gérer les clics via macro (contourne le SecureHandler)
+_G["MyCharacterPanel_SlotClick"] = function(self, button)
+    local slotID = self.slotID
+    if not slotID then return end
+    
+    if button == "LeftButton" then
+        if IsModifiedClick() then
+            local itemLocation = ItemLocation:CreateFromEquipmentSlot(slotID)
+            local itemLink = C_Item.GetItemLink(itemLocation)
+            if itemLink then HandleModifiedItemClick(itemLink) end
+        else 
+            PickupInventoryItem(slotID) 
+        end
+    elseif button == "RightButton" then
+        -- Le clic droit simple est géré par l'attribut "macro" (/use)
+        -- Le Shift+Clic Droit arrive ici via la config shift-type2
+        if IsShiftKeyDown() then
+            if not C_AddOns.IsAddOnLoaded("Blizzard_ItemSocketingUI") then 
+                C_AddOns.LoadAddOn("Blizzard_ItemSocketingUI") 
+            end
+            SocketInventoryItem(slotID)
+        end
+    end
+end
 
 function SlotMixin:OnLoad(slotID, defaultNameLabel, side)
     self.slotID = slotID
@@ -48,17 +74,93 @@ function SlotMixin:OnLoad(slotID, defaultNameLabel, side)
     end
 
     self:SetHitRectInsets(-2, -2, -7, -7)
-    self:RegisterForClicks("AnyUp", "AnyDown")
+    -- Initialisation par défaut pour le Drag & Drop (Mains libres)
+    -- LeftUp pour Drag, RightUp/Down pour interaction complète
+    self:RegisterForClicks("LeftButtonUp", "RightButtonUp", "RightButtonDown")
     self:RegisterForDrag("LeftButton")
     
+    -- Gestion manuelle du Drag & Drop pour contourner les limitations SecureButton proxy
+    self:SetScript("OnMouseDown", function(f, button)
+        -- Si on a un objet en main (Huile), le Drag est désactivé de toute façon par la logique dynamique
+        if button == "LeftButton" then
+            f.dragStartX, f.dragStartY = GetCursorPosition()
+            f:SetScript("OnUpdate", function(self)
+                local x, y = GetCursorPosition()
+                if abs(x - (self.dragStartX or x)) > 5 or abs(y - (self.dragStartY or y)) > 5 then
+                     self:SetScript("OnUpdate", nil)
+                     -- Si on commence à glisser (hors combat), on désactive le Proxy Click temporairement
+                     if not InCombatLockdown() then 
+                        self.isDraggingSource = true -- BLOQUE la mise à jour des attributs pendant le drag pour éviter le blink
+                        self:SetAttribute("type", nil) 
+                        PickupInventoryItem(self.slotID)
+                     end
+                end
+            end)
+        end
+    end)
+    
+    self:SetScript("OnMouseUp", function(f) 
+        f:SetScript("OnUpdate", nil)
+        f.isDraggingSource = nil -- Libère la protection
+        if not InCombatLockdown() then f:SetAttribute("type", "click") end
+    end)
+    
     self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-    self:RegisterEvent("GET_ITEM_INFO_RECEIVED") 
+    self:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    self:RegisterEvent("CURSOR_CHANGED") -- Important pour détecter la prise d'huile en main
 
-    self:SetAttribute("registerForClicks", "AnyUp")
-    self:SetAttribute("type2", "macro")
-    self:SetAttribute("macrotext2", "/use [nomod:shift] " .. slotID)
-    self:SetAttribute("shift-type2", "macro")
-    self:SetAttribute("shift-macrotext2", "") 
+    -- Adapte la réactivité du bouton selon qu'on a un item en main (Huile) ou non (Drag possible)
+    self.UpdateClickRegistration = function(f)
+        if f.isDraggingSource then return end -- PROTECTION ANTI-BLINK
+        
+        if CursorHasItem() or SpellIsTargeting() then
+            -- Huile en main : On écoute tout (Lua + Secure) pour être sûr que l'interaction passe
+            f:RegisterForClicks("AnyUp", "AnyDown")
+            if not InCombatLockdown() then f:SetAttribute("registerForClicks", "AnyUp, AnyDown") end
+        else
+            -- Mains libres : 
+            -- LeftButton : Seulement UP (libère le Down pour le Drag & Drop)
+            -- RightButton : UP et DOWN (Comportement standard pour Bijoux/Sertissage)
+            local types = "LeftButtonUp, RightButtonUp, RightButtonDown"
+            f:RegisterForClicks("LeftButtonUp", "RightButtonUp", "RightButtonDown")
+            if not InCombatLockdown() then f:SetAttribute("registerForClicks", types) end
+        end
+    end 
+    
+    self:SetScript("OnEnter", self.OnEnter)
+    self:SetScript("OnLeave", function(f)
+        f:SetScript("OnUpdate", nil)
+        f.isDraggingSource = nil
+        if not InCombatLockdown() then f:SetAttribute("type", "click") end
+        self.OnLeave(f)
+    end) 
+
+    -- CONFIGURATION PROXY BLIZZARD --
+
+    -- On délègue TOUS les clics aux boutons officiels de Blizzard via le type "click".
+    -- Cela garantit que toutes les actions (Huiles, Bijoux, Links, Sertissage) fonctionnent nativement sans erreur "Blocked".
+    
+    local slotNameMap = {
+        [1] = "CharacterHeadSlot", [2] = "CharacterNeckSlot", [3] = "CharacterShoulderSlot",
+        [4] = "CharacterShirtSlot", [5] = "CharacterChestSlot", [6] = "CharacterWaistSlot",
+        [7] = "CharacterLegsSlot", [8] = "CharacterFeetSlot", [9] = "CharacterWristSlot",
+        [10] = "CharacterHandsSlot", [11] = "CharacterFinger0Slot", [12] = "CharacterFinger1Slot",
+        [13] = "CharacterTrinket0Slot", [14] = "CharacterTrinket1Slot", [15] = "CharacterBackSlot",
+        [16] = "CharacterMainHandSlot", [17] = "CharacterSecondaryHandSlot", [19] = "CharacterTabardSlot",
+    }
+    
+    local targetFrameName = slotNameMap[slotID]
+    local targetFrame = targetFrameName and _G[targetFrameName]
+    
+    if targetFrame then
+        -- Redirection complète du clic vers le bouton Blizzard
+        self:SetAttribute("type", "click")
+        self:SetAttribute("clickbutton", targetFrame)
+    else
+        -- Fallback de sécurité (ne devrait pas arriver sur une installation standard)
+        self:SetAttribute("type2", "macro")
+        self:SetAttribute("macrotext2", "/use "..slotID)
+    end
 
     self:SetBackdrop(nil)
 
@@ -77,6 +179,8 @@ function SlotMixin:OnLoad(slotID, defaultNameLabel, side)
     self.BarHighlight:SetVertexColor(1, 1, 1, 1) 
     self.BarHighlight:SetAlpha(0.50) 
     self.BarHighlight:Hide()
+    
+    -- ... Suite de l'initialisation visuelle ...
 
     local iconSize = 42 
 
@@ -243,12 +347,11 @@ function SlotMixin:OnLoad(slotID, defaultNameLabel, side)
         end
     end
 
-    self:SetScript("OnEnter", self.OnEnter)
-    self:SetScript("OnLeave", self.OnLeave)
+
     self:SetScript("OnEvent", self.OnEvent) 
-    self:SetScript("OnDragStart", function() PickupInventoryItem(self.slotID) end)
+    -- OnDragStart est géré manuellement via OnMouseDown/Update car le bouton est Secure
     self:SetScript("OnReceiveDrag", function() PickupInventoryItem(self.slotID) end)
-    self:SetScript("PostClick", self.OnPostClick)
+    -- OnClick est maintenant géré uniquement par les attributs sécurisés
 end
 
 function SlotMixin:SetHighlight(enabled)
@@ -272,26 +375,12 @@ function SlotMixin:SetDimmed(enabled)
     end
 end
 
-function SlotMixin:OnPostClick(button, down)
-    if down then return end 
-    if button == "LeftButton" then
-        if IsModifiedClick() then
-            local itemLocation = ItemLocation:CreateFromEquipmentSlot(self.slotID)
-            local itemLink = C_Item.GetItemLink(itemLocation)
-            if itemLink then HandleModifiedItemClick(itemLink) end
-        else 
-            PickupInventoryItem(self.slotID) 
-        end
-    elseif button == "RightButton" then
-        if IsShiftKeyDown() then
-            if not C_AddOns.IsAddOnLoaded("Blizzard_ItemSocketingUI") then C_AddOns.LoadAddOn("Blizzard_ItemSocketingUI") end
-            SocketInventoryItem(self.slotID)
-        end
-    end
-end
+
 
 function SlotMixin:OnEvent(event, arg1)
-    if event == "PLAYER_EQUIPMENT_CHANGED" then
+    if event == "CURSOR_CHANGED" then
+        if self.UpdateClickRegistration then self:UpdateClickRegistration() end
+    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
         local slot = arg1
         if slot == self.slotID then
             self:UpdateInfo()
@@ -337,11 +426,18 @@ function SlotMixin:UpdateInfo()
     local itemLocation = ItemLocation:CreateFromEquipmentSlot(self.slotID)
     
     local db = MyCharacterPanelDB or {}
+    -- Lecture Per-Character
+    local guid = UnitGUID("player")
+    local charDb = (db.char and db.char[guid]) or {}
+    
     local showNames = (db.showItemNames == nil) and true or db.showItemNames
     local showUpgrade = (db.showUpgradeLevels == nil) and true or db.showUpgradeLevels
     local showEnchants = (db.showEnchants == nil) and true or db.showEnchants
     local showSet = (db.showSetInfo == nil) and true or db.showSetInfo
-    local enchantCheck = db.enchantCheckSlots or {}
+    local showILvl = (db.showItemLevel == nil) and true or db.showItemLevel
+    
+    -- Fallback sur la DB globale si la charDb n'est pas encore init
+    local enchantCheck = charDb.enchantCheckSlots or db.enchantCheckSlots or {}
 
     for _, f in ipairs(self.GemFrames) do 
         f:Hide() 
@@ -417,10 +513,15 @@ function SlotMixin:UpdateInfo()
         self.QualityCircle:SetVertexColor(r, g, b, 1) 
         
         if not self.isCosmetic then
-            local effectiveILvl = C_Item.GetDetailedItemLevelInfo(itemLink or "")
-            if effectiveILvl then
-                self.ItemLevel:SetText(tostring(effectiveILvl or 0))
-                self.ItemLevel:SetTextColor(1, 1, 1) 
+            if showILvl then
+                local currentILvl = C_Item.GetCurrentItemLevel(itemLocation)
+                if currentILvl then
+                    self.ItemLevel:SetText(tostring(currentILvl))
+                    self.ItemLevel:SetTextColor(1, 1, 1)
+                    self.ItemLevel:Show()
+                end
+            else
+                self.ItemLevel:Hide()
             end
         end
     else
@@ -673,6 +774,8 @@ function SlotMixin:UpdateCooldown()
 end
 
 function SlotMixin:OnEnter()
+    self:SetScript("OnUpdate", nil)
+    if self.UpdateClickRegistration then self:UpdateClickRegistration() end
     if CursorHasItem() then return end
     
     self.BarHighlight:Show() 
@@ -791,6 +894,7 @@ function SlotMixin:OnEnter()
 end
 
 function SlotMixin:OnLeave()
+    self:SetScript("OnUpdate", nil)
     local tt = addon.Tooltip
     tt:Hide()
     tt:SetMinimumWidth(0)

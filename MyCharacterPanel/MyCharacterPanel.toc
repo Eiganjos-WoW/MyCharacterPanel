@@ -2,7 +2,7 @@
 ## Title: My Character Panel
 ## Notes: Refonte de l'onglet "Info personnages" du jeu. (API 12.0)
 ## Author: Eiganjos
-## Version: v1.0.0
+## Version: v1.1.0
 ## SavedVariables: MyCharacterPanelDB
 ## IconTexture: Interface\AddOns\MyCharacterPanel\Utils\logo\mcpaddon.png
 ## X-License: Custom (See LICENSE)
@@ -49,6 +49,9 @@ Mixins\Reputation.lua
 
 # Le script principal qui gère la logique des mixins
 Mixins\Main.lua
+
+# Gestion des mises à jour et nouveautés
+Utils\maj.lua
 
 # Et enfin le fichier principal qui assemble tout et lance l'addon
 Core.lua

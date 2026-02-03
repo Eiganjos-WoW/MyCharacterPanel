@@ -245,7 +245,7 @@ function MainMixin:InitSlots()
     self.slots = {}
     for id, layout in pairs(C.SLOTS_LAYOUT) do
         local side, x, y, labelKey = unpack(layout)
-        local frame = CreateFrame("Button", nil, self, "BackdropTemplate, SecureActionButtonTemplate")
+        local frame = CreateFrame("Button", "MyCharacterPanelSlot"..id, self, "BackdropTemplate, SecureActionButtonTemplate")
         Mixin(frame, addon.SlotMixin) 
         local yOffset = y + 5
         if side == "LEFT" then frame:SetPoint("TOPLEFT", self, "TOPLEFT", x, yOffset)
@@ -832,6 +832,14 @@ function MainMixin:OnShow()
     self.isRotatingModel = false
     self:UpdateHeader()
     self:RequestUpdate()
+    
+    -- Vérification des mises à jour à l'ouverture du panneau
+    -- On déclenche la vérification de mise à jour après un court délai pour ne pas bloquer le chargement de l'UI
+    if addon.McpUpdate and addon.McpUpdate.Check then
+        C_Timer.After(0.5, function()
+             addon.McpUpdate:Check()
+        end)
+    end
 end
 
 function MainMixin:OnHide()

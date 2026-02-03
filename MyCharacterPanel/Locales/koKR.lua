@@ -113,6 +113,8 @@ L["TITLE_PREVIEW"] = "실시간 미리보기"
 L["TITLE_GENERAL_DISPLAY"] = "일반 표시"
 
 L["OPTION_SHOW_ITEM_NAMES"] = "아이템 이름 표시"
+L["OPTION_SHOW_ITEM_LEVEL"] = "Show Item Level"
+L["OPTION_SHOW_ITEM_LEVEL_DESC"] = "Show or hide the item level on the icon."
 L["OPTION_SHOW_ITEM_NAMES_DESC"] = "아이템의 전체 이름을 표시하거나 숨깁니다."
 L["OPTION_SCROLL_NAMES"] = "이름 스크롤 활성화"
 L["OPTION_SCROLL_NAMES_DESC"] = "아이템 이름이 너무 길면 스크롤합니다."
@@ -152,7 +154,44 @@ L["OPTION_ALERT_MISSING_ENCHANT_DESC"] = "마법부여가 없을 때 |cffff2020'
 
 L["DEV_LABEL"] = "|cffffffff개발:|r |cff0070deEiganjos|r-|cffffd100Archimonde|r"
 L["CREDITS_TEXTURE_ATLAS"] = "TextureAtlasViewer 애드온의 LanceDH 님께 감사드립니다"
+L["CREDITS_NEXUS"] = "개발에 참여해주신 NexuswOw님께 감사드립니다"
+
+-- ==============================================================================
+-- New Features (Update) & Reset
+-- ==============================================================================
+L["RESET_STATS"] = "통계 초기화"
+L["RESET_STATS_DESC"] = "통계 순서를 기본 구성으로 초기화합니다."
+L["MAJ_TITLE"] = "새로운 기능 - 버전 %s"
+L["MAJ_FEATURE_1"] = "- 드래그 앤 드롭: 통계를 드래그 앤 드롭하여 순서를 변경하세요!"
+L["MAJ_FEATURE_2"] = "- 캐릭터별 저장: 이제 각 캐릭터마다 고유한 설정이 있습니다."
+L["MAJ_FEATURE_3"] = "- API iLvl 수정"
+L["MAJ_FEATURE_4"] = "- Zoom: Hold CTRL + Mouse Wheel to adjust interface size (50% to 150%)"
+L["MAJ_FEATURE_5"] = "- 수정: 무기 오일/마법부여 적용 문제 해결"
+L["TITLE_RESET_SECTION"] = "기본 설정 복원"
 L["INSTRUCTION_ACCESS"] = "|TInterface\\Buttons\\UI-OptionsButton:18:18:0:-2|t 버튼을 통해 설정을 열거나 \n채팅창에 |cff00ccff/mcp|r 명령어를 입력하세요."
+
+
+-- ==============================================================================
+-- Update Notes (MAJ) & Reset
+-- ==============================================================================
+L["MAJ_NOTE_OPTIONS"] = "Don't forget that options are available via the |TInterface\\Buttons\\UI-OptionsButton:16:16:0:-1|t icon or via the |cff00ccff/mcp config|r command in-game!"
+L["SEE_OPTIONS"] = "See Options"
+
+
+
+-- Notes d'information dans les options
+L["INFO_NOTE_STATS_DRAG"] = "You can move stats between each other via Click/Drag."
+L["INFO_NOTE_ZOOM_SCROLL"] = "You can change the frame size by holding CTRL + mouse wheel up or down."
+L["OPTION_LOCK_ZOOM"] = "Lock zoom"
+L["OPTION_LOCK_ZOOM_DESC"] = "Prevents changing the interface size with CTRL + Mouse Wheel."
+-- ==============================================================================
+-- Zoom / Scaling
+-- ==============================================================================
+L["ZOOM_HINT"] = "CTRL + Scroll to zoom"
+L["ZOOM_FEEDBACK"] = "Zoom %d%%"
+L["RESET_ZOOM"] = "Reset zoom"
+L["HELP_ZOOM"] = "|cffffffffInterface Zoom:|r Hold |cff00ccffCTRL|r and use the |cff00ccffmouse wheel|r to adjust the addon size between 50% and 150%. Zoom is saved automatically."
+L["HELP_STATS_REORDER"] = "|cffffffffStats Reordering:|r Click and hold on a stat, then drag it to change its display order. Order is saved per character."
 
 -- ==============================================================================
 -- Traduction pour Config/Consts.lua

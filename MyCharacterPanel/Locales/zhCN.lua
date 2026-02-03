@@ -113,6 +113,8 @@ L["TITLE_PREVIEW"] = "实时预览"
 L["TITLE_GENERAL_DISPLAY"] = "常规显示"
 
 L["OPTION_SHOW_ITEM_NAMES"] = "显示物品名称"
+L["OPTION_SHOW_ITEM_LEVEL"] = "Show Item Level"
+L["OPTION_SHOW_ITEM_LEVEL_DESC"] = "Show or hide the item level on the icon."
 L["OPTION_SHOW_ITEM_NAMES_DESC"] = "显示或隐藏完整的物品名称。"
 L["OPTION_SCROLL_NAMES"] = "启用名称滚动"
 L["OPTION_SCROLL_NAMES_DESC"] = "如果物品名称过长则滚动显示。"
@@ -152,7 +154,40 @@ L["OPTION_ALERT_MISSING_ENCHANT_DESC"] = "选择如果没有附魔则显示 |cff
 
 L["DEV_LABEL"] = "|cffffffff开发:|r |cff0070deEiganjos|r-|cffffd100Archimonde|r"
 L["CREDITS_TEXTURE_ATLAS"] = "感谢 LanceDH 的 TextureAtlasViewer 插件"
-L["INSTRUCTION_ACCESS"] = "通过按钮 |TInterface\\Buttons\\UI-OptionsButton:18:18:0:-2|t 访问设置 \n或在聊天中输入命令 |cff00ccff/mcp|r"
+L["CREDITS_NEXUS"] = "感谢 NexuswOw 的开发"
+
+-- ==============================================================================
+-- New Features (Update) & Reset
+-- ==============================================================================
+L["RESET_STATS"] = "重置统计"
+L["RESET_STATS_DESC"] = "将统计顺序重置为默认配置。"
+L["MAJ_TITLE"] = "新功能 - 版本 %s"
+L["MAJ_FEATURE_1"] = "- 拖放：拖放统计数据以重新排序！"
+L["MAJ_FEATURE_2"] = "- 角色独立保存：每个角色现在都有自己的配置。"
+L["MAJ_FEATURE_3"] = "- API iLvl 修复"
+L["MAJ_FEATURE_4"] = "- Zoom: Hold CTRL + Mouse Wheel to adjust interface size (50% to 150%)"
+L["MAJ_FEATURE_5"] = "- 修复：武器上的油/附魔应用已修复"
+L["MAJ_NOTE_OPTIONS"] = "别忘了可以通过 |TInterface\\Buttons\\UI-OptionsButton:16:16:0:-1|t 图标或游戏中的 |cff00ccff/mcp config|r 命令访问选项！"
+L["SEE_OPTIONS"] = "查看选项"
+L["TITLE_RESET_SECTION"] = "恢复默认设置"
+L["INSTRUCTION_ACCESS"] = "通过按钮 |TInterface\\Buttons\\UI-OptionsButton:18:18:0:-2|t 访问设置 \n或在聊天中输入命令 |cff00ccff/mcp config|r"
+
+
+
+
+-- Notes d'information dans les options
+L["INFO_NOTE_STATS_DRAG"] = "You can move stats between each other via Click/Drag."
+L["INFO_NOTE_ZOOM_SCROLL"] = "You can change the frame size by holding CTRL + mouse wheel up or down."
+L["OPTION_LOCK_ZOOM"] = "Lock zoom"
+L["OPTION_LOCK_ZOOM_DESC"] = "Prevents changing the interface size with CTRL + Mouse Wheel."
+-- ==============================================================================
+-- Zoom / Scaling
+-- ==============================================================================
+L["ZOOM_HINT"] = "CTRL + Scroll to zoom"
+L["ZOOM_FEEDBACK"] = "Zoom %d%%"
+L["RESET_ZOOM"] = "Reset zoom"
+L["HELP_ZOOM"] = "|cffffffffInterface Zoom:|r Hold |cff00ccffCTRL|r and use the |cff00ccffmouse wheel|r to adjust the addon size between 50% and 150%. Zoom is saved automatically."
+L["HELP_STATS_REORDER"] = "|cffffffffStats Reordering:|r Click and hold on a stat, then drag it to change its display order. Order is saved per character."
 
 -- ==============================================================================
 -- Traduction pour Config/Consts.lua
