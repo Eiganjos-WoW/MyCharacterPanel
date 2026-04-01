@@ -1,57 +1,51 @@
-## Interface: 110507, 120000
-## Title: My Character Panel
-## Notes: Refonte de l'onglet "Info personnages" du jeu. (API 12.0)
-## Author: Eiganjos
-## Version: v1.1.0
-## SavedVariables: MyCharacterPanelDB
-## IconTexture: Interface\AddOns\MyCharacterPanel\Utils\logo\mcpaddon.png
-## X-License: Custom (See LICENSE)
-## X-Curse-Project-ID: 1410556
-## Category-enUS: User Interface
-## Category-deDE: Benutzerinterface
-## Category-esES: Interfaz de usuario
-## Category-esMX: Interfaz de usuario
-## Category-frFR: Interface utilisateur
-## Category-itIT: Interfaccia utente
-## Category-koKR: 사용자 인터페이스
-## Category-ptBR: Interface do usuário
-## Category-ruRU: Интерфейс пользователя
-## Category-zhCN: 用户界面
-## Category-zhTW: 使用者介面
+## Interface: 120001, 120005
+## Title: MyCharacterPanel
+## Notes-frFR: Refonte moderne de la fenêtre d'information du personnage.
+## Notes-deDE: Modernes Reskin des Charakterinfo-Fensters.
+## Notes-esES: Rediseño moderno de la ventana de información del personaje.
+## Notes-esMX: Rediseño moderno de la ventana de información del personaje.
+## Notes-itIT: Restyling moderno della finestra delle informazioni del personaggio.
+## Notes-koKR: 캐릭터 정보창의 현대적인 리스킨입니다.
+## Notes-ptBR: Redesign moderno da janela de informações do personagem.
+## Notes-ruRU: Современный рескин окна информации о персонаже.
+## Notes-zhCN: 角色信息窗口的现代重绘。
+## Notes-zhTW: 角色資訊視窗的現代化外觀。
 
-# On charge ici les fichiers pour la configuration et les constantes
-Config\Consts.lua
-Config\Options.lua
+## Author: Eiganjos-Archimonde (EU)
+## Version: 2.0.3
+## SavedVariables: MCP_Config
+## SavedVariablesPerCharacter: MCP_StatsOrder
+## OptionalDeps: LibSharedMedia-3.0, SharedMedia
+## IconTexture: Interface\AddOns\MyCharacterPanel\logo\mcpaddon.png
 
-# On charge les fichiers de traduction pour que l'addon parle français et anglais
-Locales\enUS.lua
-Locales\enGB.lua
-Locales\deDE.lua
-Locales\esES.lua
-Locales\esMX.lua
-Locales\frFR.lua
-Locales\itIT.lua
-Locales\ptBR.lua
-Locales\ruRU.lua
-Locales\koKR.lua
-Locales\zhCN.lua
+## Category: User Interface
 
-# Des petits outils pour m'aider à formater le texte
-Utils\Formatting.lua
+# 0. Localisation
+Langues/enUS.lua
+Langues/frFR.lua
+Langues/deDE.lua
+Langues/esES.lua
+Langues/esMX.lua
+Langues/itIT.lua
+Langues/koKR.lua
+Langues/ptBR.lua
+Langues/ruRU.lua
+Langues/zhCN.lua
+Langues/zhTW.lua
 
-# Ici je mets tous les morceaux de mon interface (équipement, stats, etc.)
-Mixins\Slot.lua
-Mixins\Stats.lua
-Mixins\Equipment.lua
-Mixins\Titles.lua
-Mixins\Coin.lua
-Mixins\Reputation.lua
+# 1. Base
+Noyau/Constantes.lua
+Outils/Fonctions.lua
 
-# Le script principal qui gère la logique des mixins
-Mixins\Main.lua
+# 2. Modules (Vues)
+Onglets/Personnage.lua
+Onglets/Inspection.lua
+Onglets/Reputation.lua
+Onglets/Monnaies.lua
+Onglets/PaperDollFrame.lua
 
-# Gestion des mises à jour et nouveautés
-Utils\maj.lua
+# 3. Options
+Onglets/Options.lua
 
-# Et enfin le fichier principal qui assemble tout et lance l'addon
-Core.lua
+# 4. Chef d'Orchestre
+Noyau/Coeur.lua
